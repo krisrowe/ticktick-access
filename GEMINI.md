@@ -17,3 +17,12 @@ To maintain clarity and separation of concerns in documentation, please adhere t
 ## Sensitive Information Handling
 
 *   **`TICKTICK_ACCESS_TOKEN`**: This token is sensitive and should **never** be hardcoded into any script, documentation, or committed to version control. It must always be loaded from a secure source, such as the `.env` file (which is `.gitignore`d) or environment variables. All examples and tool implementations should respect this. When testing, ensure that the token is passed securely (e.g., via Docker environment variables or loaded from a mounted `.env`).
+
+### Pre-Commit Sensitive Information Check
+
+Before committing any changes, especially to code, examples, or documentation, perform a thorough check for sensitive or personal information. This includes, but is not limited to:
+
+*   **Developer-specific Paths:** Avoid including paths that reveal a developer's home directory or specific user names (e.g., `/home/developer/project` should be generalized to `/path/to/project`).
+*   **Names and Emails:** Do not include anyone's real name, email address, or any other personally identifiable information. Use generic placeholders (e.g., "John Doe", "example@email.com") instead.
+*   **Real IDs/Secrets:** Ensure all task IDs, project IDs, client IDs/secrets, or any other API-related identifiers are generic placeholders in examples and documentation.
+*   **Hardcoded Credentials:** Double-check that no API keys, tokens, or other credentials are hardcoded anywhere in the repository.
