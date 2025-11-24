@@ -102,25 +102,67 @@ curl -X POST "https://api.ticktick.com/open/v1/task" \
 ```
 *(Remember to capture the `id` from the response of this command for the next steps.)*
 
-#### Update an Existing Task (e.g., Mark as Complete)
+#### Update an Existing Task
 
 To update an existing task (e.g., to mark it as complete, or modify its title/content), use a `POST` request to the `/open/v1/task/{taskId}` endpoint.
 
-**IMPORTANT**: When updating a task, it is crucial to include *all* fields from the task's original `GET` request in the `POST` request payload. If fields are omitted, they may be inadvertently set to `null` or default values by the API. To mark a task as complete, set its `status` field to `1`.
+**IMPORTANT**: When updating a task, it is crucial to include *all* fields from the task's original `GET` request in the `POST` request payload. If fields are omitted, they may be inadvertently set to `null` or default values by the API.
 
-```bash
-curl -X POST "https://api.ticktick.com/open/v1/task/YOUR_TASK_ID" \
-     -H "Content-Type: application/json" \
-     -H "Authorization: Bearer $TICKTICK_ACCESS_TOKEN" \
-     -d '{ \
-         "id": "YOUR_TASK_ID", \
-         "projectId": "YOUR_PROJECT_ID", \
-         "title": "Updated Task Title", \
-         "status": 1, \
-         "priority": 0 \
-         // ... include all other original fields for YOUR_TASK_ID \
-     }' | jq
-```
+Here's a detailed example of how to update a task, demonstrating how to retrieve existing fields and then modify specific ones:
+
+1.  **Load your `TICKTICK_ACCESS_TOKEN` from `.env`**:
+    ```bash
+    export $(cat .env | xargs)
+    ```
+
+2.  **Retrieve the full details of the task you want to update**:
+    You'll need the `PROJECT_ID` of the task's parent project and the `TASK_ID` of the task itself.
+
+    ```bash
+    # Replace YOUR_PROJECT_ID and YOUR_TASK_ID with actual values
+    PROJECT_ID="YOUR_PROJECT_ID"
+    TASK_ID="YOUR_TASK_ID"
+
+    # Fetch all tasks from the project and filter for the specific task
+    TASK_DETAILS=$(curl -X GET "https://api.ticktick.com/open/v1/project/$PROJECT_ID/data" \
+         -H "Authorization: Bearer $TICKTICK_ACCESS_TOKEN" | \
+    jq ".tasks[] | select(.id == \"$TASK_ID\")")
+
+    echo $TASK_DETAILS | jq
+    ```
+    This will output the full JSON object of the task. Copy this entire JSON object.
+
+3.  **Modify the desired fields and update the task**:
+    Take the full JSON object you copied in the previous step. Modify the `title`, `content`, `priority`, `dueDate`, `status`, or any other field you wish to change. Then, use this modified JSON in the `-d` payload of your `curl` command.
+
+    For example, to update the title and content of a task:
+
+    ```bash
+    export $(cat .env | xargs) # Ensure token is loaded
+    TASK_ID="GENERIC_TASK_ID" # Example Task ID
+    
+    curl -X POST "https://api.ticktick.com/open/v1/task/$TASK_ID" \
+         -H "Content-Type: application/json" \
+         -H "Authorization: Bearer $TICKTICK_ACCESS_TOKEN" \
+         -d '{
+             "id": "GENERIC_TASK_ID",
+             "projectId": "GENERIC_PROJECT_ID",
+             "sortOrder": 12345,
+             "title": "Example: Follow-up with Product on Generic Feedback",
+             "content": "Example: Discuss feedback from the engineering team regarding product X on DATE with NAME.",
+             "startDate": "GENERIC_DATE",
+             "dueDate": "GENERIC_DATE",
+             "timeZone": "America/Los_Angeles",
+             "isAllDay": true,
+             "priority": 3,
+             "repeatFlag": "",
+             "status": 0,
+             "etag": "GENERIC_ETAG",
+             "kind": "TEXT"
+         }' | jq
+    ```
+    *(Note: The `etag` field is often returned by the API but is not strictly required in the update payload. However, including it from the original task details can be good practice.)*
+
 
 ## Limitations (Vendor API)
 
