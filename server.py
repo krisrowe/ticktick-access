@@ -290,9 +290,90 @@ async def create_task(
         return {"success": False, "error": str(e), "task": None}
 
 @mcp.tool(
-    name="complete_task",
-    description="Mark a task as completed in TickTick by setting its status to 1 (completed). Requires the task ID (obtain from list_tasks) and project ID (obtain from list_projects). Every task belongs to exactly one project. Returns success status and the updated task data with status=1.",
+    name="update_task",
+    description="Update an existing task in a TickTick project. This tool allows modification of a task's title, content, priority, due date, and other fields. Returns the updated task details.",
 )
+async def update_task(
+    task_id: str = Field(description="The ID of the task to update. Obtain this from list_tasks."),
+    project_id: str = Field(description="The ID of the project (also called 'list' in UI) containing the task. Obtain this from list_projects."),
+    title: Optional[str] = Field(default=None, description="Optional new title/name for the task."),
+    content: Optional[str] = Field(default=None, description="Optional new description or content for the task. Can include markdown formatting."),
+    priority: Optional[int] = Field(default=None, description="Optional new priority level from 0-5. Higher numbers indicate higher priority."),
+    due_date: Optional[str] = Field(default=None, description="Optional new due date in ISO 8601 format (e.g., '2024-12-31T23:59:59Z'). Set to '' or None to clear."),
+    status: Optional[int] = Field(default=None, description="Optional new status for the task (0=incomplete, 1=completed). Use complete_task tool to mark as complete."),
+    tags: Optional[List[str]] = Field(default=None, description="Optional list of tags to associate with the task.")
+) -> Dict[str, Any]:
+    """
+    Update an existing task in a TickTick project.
+    
+    This tool allows modification of a task's title, content, priority, due date, 
+    and other fields. It's crucial to ensure all existing fields of the task are 
+    included in the update payload to prevent accidental data loss, as per TickTick API behavior.
+    
+    Args:
+        task_id: The ID of the task to update.
+        project_id: The ID of the project containing the task.
+        title: Optional new title/name for the task.
+        content: Optional new description or content for the task.
+        priority: Optional new priority level (0-5).
+        due_date: Optional new due date in ISO 8601 format.
+        status: Optional new status (0=incomplete, 1=completed).
+        tags: Optional list of tags.
+
+    Returns:
+        Dictionary containing:
+        - success: Boolean indicating if the update succeeded
+        - message: Success message
+        - task: The updated task object
+        - error: Error message if the update failed
+    """
+    try:
+        access_token = get_ticktick_access_token()
+        
+        # 1. Retrieve the existing task to preserve all fields
+        tasks_data = await get_ticktick_tasks(access_token, list_id=project_id)
+        if not tasks_data or "tasks" not in tasks_data:
+            return {"success": False, "error": f"Could not retrieve tasks for project {project_id}"}
+        
+        existing_task = next((t for t in tasks_data["tasks"] if t.get("id") == task_id), None)
+        if not existing_task:
+            return {"success": False, "error": f"Task {task_id} not found in project {project_id}"}
+        
+        # 2. Prepare the update payload, preserving existing fields and updating specified ones
+        update_payload = existing_task.copy()
+        
+        if title is not None:
+            update_payload["title"] = title
+        if content is not None:
+            update_payload["content"] = content
+        if priority is not None:
+            update_payload["priority"] = max(0, min(5, priority)) # Clamp between 0-5
+        if due_date is not None:
+            update_payload["dueDate"] = due_date
+        if status is not None:
+            update_payload["status"] = status
+        if tags is not None:
+            update_payload["tags"] = tags
+        
+        # The API requires id and projectId in the payload as well
+        update_payload["id"] = task_id
+        update_payload["projectId"] = project_id
+
+        # 3. Make the API request
+        result = await make_ticktick_request("POST", f"task/{task_id}", access_token, data=update_payload)
+        
+        if result:
+            return {
+                "success": True,
+                "message": f"Task '{update_payload.get('title', task_id)}' updated successfully",
+                "task": result
+            }
+        return {"success": False, "error": "Failed to update task", "task": None}
+    except ValueError as e:
+        logger.error(f"Error updating task: {e}")
+        return {"success": False, "error": str(e), "task": None}
+
+
 async def complete_task(
     task_id: str = Field(description="The ID of the task to complete. Every task belongs to exactly one project. Use list_tasks to find task IDs for tasks in a specific project."),
     project_id: str = Field(description="The ID of the project (also called 'list' in UI) containing the task. Every task must belong to exactly one project. Use list_projects to find available project IDs.")

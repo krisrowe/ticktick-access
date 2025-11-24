@@ -22,10 +22,10 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
 COPY . /app
 
 # Install Python dependencies using uv directly into the container's Python environment
-RUN uv pip install --system "mcp[cli]" httpx uvicorn
+RUN uv pip install --system "mcp[cli]" httpx uvicorn requests python-dotenv
 
 # Expose the port our MCP server runs on
 EXPOSE 8000
 
 # Set the entrypoint to run our server.py script using uvicorn
-CMD ["uvicorn", "server:mcp_app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug"]
+CMD ["uvicorn", "server:mcp_app", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug", "--reload"]
