@@ -326,8 +326,6 @@ For a complete reference of all tools and resources, see [docs/TOOLS.md](./docs/
 
 For detailed instructions on how to authenticate with the TickTick API and for `curl` examples of common operations, please see the **[Vendor API Guide](./docs/VENDOR-API.md)**.
 
-## Synchronizing Configuration (`.ws-sync`)
+## Managing Local Configuration
 
-The `.env` file is listed in `.gitignore` and will not be committed. To manage this and other important local files across different workstations, this project includes a `.ws-sync` file.
-
-The `.ws-sync` file is simply an inventory of files that are not part of the git repository but are essential for the project to run. These are files that you need to manually maintain and synchronize between your development environments.
+The `.env` file is listed in `.gitignore` and will not be committed. You'll need to manually maintain your `.env` file (containing `TICKTICK_ACCESS_TOKEN` and other credentials) across different development environments.
