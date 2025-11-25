@@ -1,6 +1,6 @@
 # Contributing to the TickTick Access MCP Server
 
-This document outlines guidelines and best practices for contributors working on the `ticktick-access` MCP server. It covers setting up your development environment, testing changes, and adhering to documentation standards.
+This document outlines guidelines and best practices for contributors working on the `ticktick-mcp` MCP server. It covers setting up your development environment, testing changes, and adhering to documentation standards.
 
 ## 1. Development Setup
 
@@ -16,7 +16,7 @@ When you make changes to existing tools (e.g., in `server.py`) or add new ones, 
 
 2.  **Rebuild Docker Image:**
     ```bash
-    cd ticktick-access # Navigate to the project root
+    cd ticktick-mcp # Navigate to the project root
     docker build -t ticktick-mcp-server:latest .
     ```
     This command rebuilds your Docker image, incorporating your latest code changes.

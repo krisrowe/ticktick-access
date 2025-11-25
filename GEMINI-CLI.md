@@ -24,7 +24,7 @@ With HTTP transport, you must manually manage the Docker container lifecycle:
 #### Using `gemini mcp add` Command
 
 ```bash
-# From the ticktick-access directory (or your workspace root)
+# From the ticktick-mcp directory (or your workspace root)
 gemini mcp add ticktick \
   --transport http \
   --http-url "http://localhost:8000/mcp" \
@@ -179,7 +179,7 @@ If you're currently using HTTP transport and want to switch to auto-start mode:
 
 2. **Rebuild the Docker image** (to ensure stdio support is available):
    ```bash
-   cd ticktick-access
+   cd ticktick-mcp
    docker build -t ticktick-mcp-server:latest .
    ```
 
@@ -209,9 +209,9 @@ If you're currently using HTTP transport and want to switch to auto-start mode:
 When you configure the TickTick MCP server, Gemini CLI creates `settings.json` files in these locations:
 
 1. **`.gemini/settings.json`** (project scope)
-   - Created when running `gemini mcp add` from the `ticktick-access` directory (or without `--scope user`)
+   - Created when running `gemini mcp add` from the `ticktick-mcp` directory (or without `--scope user`)
    - Only available when running Gemini CLI from that directory or subdirectories
-   - Example location: `~/your-workspace/ticktick-access/.gemini/settings.json`
+   - Example location: `~/your-workspace/ticktick-mcp/.gemini/settings.json`
 
 2. **`~/.gemini/settings.json`** (user scope)
    - Created when running `gemini mcp add` with `--scope user`

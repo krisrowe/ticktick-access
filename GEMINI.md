@@ -1,6 +1,6 @@
-# Gemini CLI Agent Notes for ticktick-access repository
+# Gemini CLI Agent Notes for ticktick-mcp repository
 
-This document provides guidelines and context for the Gemini CLI agent when working within the `ticktick-access` repository.
+This document provides guidelines and context for the Gemini CLI agent when working within the `ticktick-mcp` repository.
 
 ## Content Placement Guidelines
 
@@ -8,7 +8,7 @@ To maintain clarity and separation of concerns in documentation, please adhere t
 
 *   **`VENDOR-API.md`**: This file is strictly for documenting raw API interaction with the TickTick platform using generic `curl` commands. It should detail authentication flows, API endpoints, request/response formats, and any vendor-specific limitations. **It should NOT contain information about our internal MCP server product, Docker testing steps, or any other contributor-specific development process.**
 
-*   **`README.md`**: This file serves as the primary user-facing documentation for setting up and running the `ticktick-access` MCP server. It should include quick start guides, Docker setup instructions for users, and configuration information. It focuses on **usage and configuration, not on maintenance or extension of the MCP server.**
+*   **`README.md`**: This file serves as the primary user-facing documentation for setting up and running the `ticktick-mcp` MCP server. It should include quick start guides, Docker setup instructions for users, and configuration information. It focuses on **usage and configuration, not on maintenance or extension of the MCP server.**
 
 *   **`CONTRIBUTING.md`**: This file is for contributors and developers. It includes guides on setting up a development environment, **how to build, run, and test changes to tools (including Docker-based testing steps)**, and other development-specific information.
 
@@ -34,7 +34,7 @@ When making changes to the MCP server code (e.g., in `server.py`), it is crucial
 ### Development Workflow
 
 1.  **Make Code Changes:** Modify the server code as required (e.g., adding a new tool to `server.py`).
-2.  **Rebuild the Docker Image:** After making changes, you must rebuild the `ticktick-mcp-server:latest` Docker image. Run the following command from the `ticktick-access` directory:
+2.  **Rebuild the Docker Image:** After making changes, you must rebuild the `ticktick-mcp-server:latest` Docker image. Run the following command from the `ticktick-mcp` directory:
     ```bash
     docker build -t ticktick-mcp-server:latest .
     ```

@@ -1,4 +1,4 @@
-# TickTick Access MCP Server
+# MCP Server for Task Management using TickTick
 
 This project provides tools and examples for personal agentic access to the TickTick task platform's API. It now includes a **Model Context Protocol (MCP) server** to provide a unified interface for managing tasks and other data, making it easily consumable by LLMs like Gemini CLI and Claude Desktop.
 
@@ -38,9 +38,9 @@ Before building and running the Docker container, you need to set up authenticat
     *   Set the **"OAuth redirect URL"** to exactly: `http://localhost:8080`
 
 2.  **Configure `.env` File:**
-    Create a file named `.env` in the root of your `ticktick-access` directory:
+    Create a file named `.env` in the root of your `ticktick-mcp` directory:
     ```bash
-    cd ticktick-access
+    cd ticktick-mcp
     ```
     
     Create `.env` with your credentials:
@@ -68,7 +68,7 @@ Before building and running the Docker container, you need to set up authenticat
 Navigate to the project directory and build the Docker image:
 
 ```bash
-cd ticktick-access
+cd ticktick-mcp
 docker build -t ticktick-mcp-server:latest .
 ```
 
@@ -192,7 +192,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 1.  **Navigate to the project directory:**
     ```bash
-    cd ticktick-access
+    cd ticktick-mcp
     ```
 
 2.  **Create and activate a virtual environment:**
