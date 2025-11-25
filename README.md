@@ -325,7 +325,3 @@ For a complete reference of all tools and resources, see [docs/TOOLS.md](./docs/
 ### Appendix: Direct TickTick V1 API Usage
 
 For detailed instructions on how to authenticate with the TickTick API and for `curl` examples of common operations, please see the **[Vendor API Guide](./docs/VENDOR-API.md)**.
-
-## Managing Local Configuration
-
-The `.env` file is listed in `.gitignore` and will not be committed. You'll need to manually maintain your `.env` file (containing `TICKTICK_ACCESS_TOKEN` and other credentials) across different development environments.
