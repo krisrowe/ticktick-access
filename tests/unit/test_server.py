@@ -1,25 +1,27 @@
 import json
 import os
+from unittest.mock import patch
 
 import pytest
 import respx
 from httpx import Response
 
-from server import (
-    TICKTICK_API_BASE,
-    USER_AGENT,
-    get_ticktick_projects,
-    get_ticktick_tasks,
-    make_ticktick_request,
-    update_task,
-)
+from ticktick.sdk.client import TICKTICK_API_BASE, USER_AGENT, request
+from ticktick.sdk.projects import list_projects
+from ticktick.sdk.tasks import list_tasks, update_task
+
+
+@pytest.fixture
+def mock_token():
+    with patch("ticktick.sdk.client.get_access_token", return_value="test_token"):
+        yield
 
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_ticktick_request_get_success():
+async def test_ticktick_request_get_success(mock_token):
     """
-    Tests that make_ticktick_request successfully makes a GET request
+    Tests that request successfully makes a GET request
     with the correct headers and returns the JSON response.
     """
     # Define the mock route
@@ -28,30 +30,30 @@ async def test_ticktick_request_get_success():
     )
 
     # Call the function under test
-    response_data = await make_ticktick_request(method="GET", endpoint="project", access_token="test_token")
+    response_data = await request(method="GET", endpoint="project")
 
     # Assertions
     assert mock_route.called
     assert response_data == [{"id": "123", "name": "Test Project"}]
 
     # Check that the correct headers were sent
-    request = mock_route.calls.last.request
-    assert request.headers["authorization"] == "Bearer test_token"
-    assert request.headers["user-agent"] == USER_AGENT
-    assert request.headers["content-type"] == "application/json"
+    request_call = mock_route.calls.last.request
+    assert request_call.headers["authorization"] == "Bearer test_token"
+    assert request_call.headers["user-agent"] == USER_AGENT
+    assert request_call.headers["content-type"] == "application/json"
 
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_ticktick_request_handle_error():
+async def test_ticktick_request_handle_error(mock_token):
     """
-    Tests that make_ticktick_request returns None when an HTTP error occurs.
+    Tests that request returns None when an HTTP error occurs.
     """
     # Define the mock route to return a 500 error
     mock_route = respx.get(f"{TICKTICK_API_BASE}/project").mock(return_value=Response(500))
 
     # Call the function under test
-    response_data = await make_ticktick_request(method="GET", endpoint="project", access_token="test_token")
+    response_data = await request(method="GET", endpoint="project")
 
     # Assertion
     assert mock_route.called
@@ -60,9 +62,9 @@ async def test_ticktick_request_handle_error():
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_ticktick_request_post_success():
+async def test_ticktick_request_post_success(mock_token):
     """
-    Tests that make_ticktick_request successfully makes a POST request
+    Tests that request successfully makes a POST request
     with a JSON payload.
     """
     post_data = {"name": "New Project"}
@@ -73,25 +75,25 @@ async def test_ticktick_request_post_success():
     )
 
     # Call the function under test
-    response_data = await make_ticktick_request(
-        method="POST", endpoint="project", access_token="test_token", data=post_data
+    response_data = await request(
+        method="POST", endpoint="project", data=post_data
     )
 
     # Assertions
     assert mock_route.called
     assert response_data == {"id": "456", "name": "New Project"}
 
-    # Check the payload by decoding and parsing the JSON
-    request = mock_route.calls.last.request
-    request_payload = json.loads(request.content)
+    # Check the payload
+    request_call = mock_route.calls.last.request
+    request_payload = json.loads(request_call.content)
     assert request_payload == post_data
 
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_get_ticktick_projects():
+async def test_list_projects(mock_token):
     """
-    Tests that get_ticktick_projects successfully retrieves a list of projects.
+    Tests that list_projects successfully retrieves a list of projects.
     """
     mock_projects = [
         {"id": "proj1", "name": "Project 1", "sortOrder": 1},
@@ -100,38 +102,38 @@ async def test_get_ticktick_projects():
 
     mock_route = respx.get(f"{TICKTICK_API_BASE}/project").mock(return_value=Response(200, json=mock_projects))
 
-    result = await get_ticktick_projects(access_token="test_token")
+    result = await list_projects()
 
     assert mock_route.called
     assert result == mock_projects
-    request = mock_route.calls.last.request
-    assert request.headers["authorization"] == "Bearer test_token"
+    request_call = mock_route.calls.last.request
+    assert request_call.headers["authorization"] == "Bearer test_token"
 
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_get_ticktick_projects_error():
+async def test_list_projects_error(mock_token):
     """
-    Tests that get_ticktick_projects returns None when an error occurs.
+    Tests that list_projects returns empty list when an error occurs.
     """
     mock_route = respx.get(f"{TICKTICK_API_BASE}/project").mock(return_value=Response(500))
 
-    result = await get_ticktick_projects(access_token="test_token")
+    result = await list_projects()
 
     assert mock_route.called
-    assert result is None
+    assert result == []
 
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_get_ticktick_tasks():
+async def test_list_tasks(mock_token):
     """
-    Tests that get_ticktick_tasks successfully retrieves tasks from a project.
+    Tests that list_tasks successfully retrieves tasks from a project.
     """
     mock_tasks_data = {
         "tasks": [
             {"id": "task1", "title": "Task 1", "projectId": "proj1", "status": 0},
-            {"id": "task2", "title": "Task 2", "projectId": "proj1", "status": 1},
+            {"id": "task2", "title": "Task 2", "projectId": "proj1", "status": 2},
         ],
         "sprint": None,
     }
@@ -140,33 +142,24 @@ async def test_get_ticktick_tasks():
         return_value=Response(200, json=mock_tasks_data)
     )
 
-    result = await get_ticktick_tasks(access_token="test_token", list_id="proj1")
+    result = await list_tasks(project_id="proj1")
 
     assert mock_route.called
-    assert result == mock_tasks_data
-    request = mock_route.calls.last.request
-    assert request.headers["authorization"] == "Bearer test_token"
+    assert result["project_id"] == "proj1"
+    assert result["tasks"] == mock_tasks_data["tasks"]
+    assert result["count"] == 2
+    assert result["completed"] == 1
+    assert result["incomplete"] == 1
+    
+    request_call = mock_route.calls.last.request
+    assert request_call.headers["authorization"] == "Bearer test_token"
 
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_get_ticktick_tasks_error():
+async def test_get_task_details(mock_token):
     """
-    Tests that get_ticktick_tasks returns None when an error occurs.
-    """
-    mock_route = respx.get(f"{TICKTICK_API_BASE}/project/proj1/data").mock(return_value=Response(404))
-
-    result = await get_ticktick_tasks(access_token="test_token", list_id="proj1")
-
-    assert mock_route.called
-    assert result is None
-
-
-@pytest.mark.asyncio
-@respx.mock
-async def test_get_task_details():
-    """
-    Tests getting details of a single task by task ID.
+    Tests getting details of a single task by task ID using request().
     """
     mock_task = {
         "id": "task123",
@@ -179,17 +172,17 @@ async def test_get_task_details():
 
     mock_route = respx.get(f"{TICKTICK_API_BASE}/task/task123").mock(return_value=Response(200, json=mock_task))
 
-    result = await make_ticktick_request(method="GET", endpoint="task/task123", access_token="test_token")
+    result = await request(method="GET", endpoint="task/task123")
 
     assert mock_route.called
     assert result == mock_task
-    request = mock_route.calls.last.request
-    assert request.headers["authorization"] == "Bearer test_token"
+    request_call = mock_route.calls.last.request
+    assert request_call.headers["authorization"] == "Bearer test_token"
 
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_update_task():
+async def test_update_task(mock_token):
     """
     Tests that update_task successfully updates a task with new data.
     """
@@ -213,10 +206,8 @@ async def test_update_task():
         "content": "Updated content",
     }
 
-    # Set up environment variable for access token
-    os.environ["TICKTICK_ACCESS_TOKEN"] = "test_token"
-
-    get_route = respx.get(f"{TICKTICK_API_BASE}/task/task123").mock(return_value=Response(200, json=existing_task))
+    # Note: update_task calls get_task which uses project/{project_id}/task/{task_id}
+    get_route = respx.get(f"{TICKTICK_API_BASE}/project/proj1/task/task123").mock(return_value=Response(200, json=existing_task))
 
     post_route = respx.post(f"{TICKTICK_API_BASE}/task/task123").mock(return_value=Response(200, json=updated_task))
 
@@ -250,19 +241,14 @@ async def test_update_task():
     assert update_payload["priority"] == 2
     assert update_payload["projectId"] == "proj1"
 
-    # Clean up
-    del os.environ["TICKTICK_ACCESS_TOKEN"]
-
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_update_task_error_fetching_existing():
+async def test_update_task_error_fetching_existing(mock_token):
     """
     Tests that update_task handles errors when fetching existing task details.
     """
-    os.environ["TICKTICK_ACCESS_TOKEN"] = "test_token"
-
-    get_route = respx.get(f"{TICKTICK_API_BASE}/task/task123").mock(return_value=Response(404))
+    get_route = respx.get(f"{TICKTICK_API_BASE}/project/proj1/task/task123").mock(return_value=Response(404))
 
     result = await update_task(task_id="task123", project_id="proj1", title="New Title")
 
@@ -270,13 +256,10 @@ async def test_update_task_error_fetching_existing():
     assert result["success"] is False
     assert "error" in result
 
-    # Clean up
-    del os.environ["TICKTICK_ACCESS_TOKEN"]
-
 
 @pytest.mark.asyncio
 @respx.mock
-async def test_update_task_error_updating():
+async def test_update_task_error_updating(mock_token):
     """
     Tests that update_task handles errors when updating the task.
     """
@@ -287,9 +270,7 @@ async def test_update_task_error_updating():
         "status": 0,
     }
 
-    os.environ["TICKTICK_ACCESS_TOKEN"] = "test_token"
-
-    get_route = respx.get(f"{TICKTICK_API_BASE}/task/task123").mock(return_value=Response(200, json=existing_task))
+    get_route = respx.get(f"{TICKTICK_API_BASE}/project/proj1/task/task123").mock(return_value=Response(200, json=existing_task))
 
     post_route = respx.post(f"{TICKTICK_API_BASE}/task/task123").mock(return_value=Response(500))
 
@@ -299,6 +280,3 @@ async def test_update_task_error_updating():
     assert post_route.called
     assert result["success"] is False
     assert "error" in result
-
-    # Clean up
-    del os.environ["TICKTICK_ACCESS_TOKEN"]
