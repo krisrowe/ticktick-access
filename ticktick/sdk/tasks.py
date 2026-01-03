@@ -86,6 +86,8 @@ async def create_task(
     priority: int = 0,
     due_date: str | None = None,
     reminders: list[str] | None = None,
+    status: int | None = None,
+    completed_time: str | None = None,
 ) -> dict[str, Any]:
     """Create a new task in a project.
 
@@ -98,6 +100,9 @@ async def create_task(
         reminders: Optional list of reminder triggers in ISO 8601 duration format.
             Examples: ["TRIGGER:PT0S"] (at due time), ["TRIGGER:-PT30M"] (30 min before),
             ["TRIGGER:-PT1H"] (1 hour before), ["TRIGGER:-P1D"] (1 day before).
+        status: Optional status (0=open, 2=completed, -1=won't do). Default is 0 (open).
+        completed_time: Optional completion timestamp in ISO 8601 format.
+            Only meaningful when status=2. Example: "2025-01-15T10:30:00+0000".
 
     Returns:
         Dict with success status, task data, and message.
@@ -114,6 +119,10 @@ async def create_task(
         task_data["dueDate"] = due_date
     if reminders:
         task_data["reminders"] = reminders
+    if status is not None:
+        task_data["status"] = status
+    if completed_time:
+        task_data["completedTime"] = completed_time
 
     result = await client.post("task", task_data)
 
@@ -137,6 +146,7 @@ async def update_task(
     status: int | None = None,
     tags: list[str] | None = None,
     reminders: list[str] | None = None,
+    completed_time: str | None = None,
 ) -> dict[str, Any]:
     """Update an existing task.
 
@@ -151,6 +161,8 @@ async def update_task(
         tags: Optional list of tags.
         reminders: Optional list of reminder triggers in ISO 8601 duration format.
             Examples: ["TRIGGER:PT0S"] (at due time), ["TRIGGER:-PT30M"] (30 min before).
+        completed_time: Optional completion timestamp in ISO 8601 format.
+            Example: "2025-01-15T10:30:00+0000".
 
     Returns:
         Dict with success status, task data, and message.
@@ -179,6 +191,8 @@ async def update_task(
         update_payload["tags"] = tags
     if reminders is not None:
         update_payload["reminders"] = reminders
+    if completed_time is not None:
+        update_payload["completedTime"] = completed_time
 
     result = await client.post(f"task/{task_id}", update_payload)
 

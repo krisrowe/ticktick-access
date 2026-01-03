@@ -228,12 +228,18 @@ def tasks_list(project, format):
 @click.option("--project", default="Work", help="Project ID or name (default: 'Work').")
 @click.option("--content", default="", help="Task description.")
 @click.option("--priority", type=int, default=0, help="Priority 0-5 (0=none, 1=low, 3=medium, 5=high).")
-def tasks_create(title, project, content, priority):
+@click.option("--due", default=None, help="Due date in ISO 8601 format (e.g., 2025-01-15T00:00:00.000+0000).")
+@click.option("--status", type=int, default=None, help="Status: 0=open, 2=completed, -1=won't do.")
+@click.option("--completed-time", default=None, help="Completion time in ISO 8601 format (for status=2).")
+def tasks_create(title, project, content, priority, due, status, completed_time):
     """Create a new task."""
 
     async def _create():
         pid = await _resolve_project_id(project)
-        return await sdk_tasks.create_task(pid, title, content=content, priority=priority)
+        return await sdk_tasks.create_task(
+            pid, title, content=content, priority=priority, due_date=due,
+            status=status, completed_time=completed_time
+        )
 
     result = run_async(_create())
 
@@ -247,23 +253,25 @@ def tasks_create(title, project, content, priority):
 
 @tasks.command("update")
 @click.argument("task_id")
-@click.option("--project", default="Work", help="Project ID or name (default: 'Work').")
-@click.option("--title", help="New title.")
-@click.option("--content", help="New description.")
-@click.option("--priority", type=int, help="New priority (0-5).")
-@click.option("--status", type=int, help="New status (0=open, 2=completed).")
-def tasks_update(task_id, project, title, content, priority, status):
+@click.option("--project", required=True, help="Project ID or name containing the task.")
+@click.option("--title", default=None, help="New task title.")
+@click.option("--content", default=None, help="New task description.")
+@click.option("--priority", type=int, default=None, help="New priority 0-5.")
+@click.option("--due", default=None, help="New due date in ISO 8601 format.")
+@click.option("--status", type=int, default=None, help="New status: 0=open, 2=completed, -1=won't do.")
+def tasks_update(task_id, project, title, content, priority, due, status):
     """Update an existing task."""
 
     async def _update():
         pid = await _resolve_project_id(project)
         return await sdk_tasks.update_task(
-            pid,
-            task_id,
+            project_id=pid,
+            task_id=task_id,
             title=title,
             content=content,
             priority=priority,
-            status=status
+            due_date=due,
+            status=status,
         )
 
     result = run_async(_update())

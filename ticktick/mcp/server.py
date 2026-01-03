@@ -99,6 +99,17 @@ async def create_task(
             "['TRIGGER:-PT1H'] (1 hour before), ['TRIGGER:-P1D'] (1 day before)."
         ),
     ),
+    status: int | None = Field(
+        default=None,
+        description="Optional status: 0=open (default), 2=completed, -1=won't do.",
+    ),
+    completed_time: str | None = Field(
+        default=None,
+        description=(
+            "Optional completion timestamp in ISO 8601 format. "
+            "Only meaningful when status=2. Example: '2025-01-15T10:30:00+0000'."
+        ),
+    ),
 ) -> dict[str, Any]:
     """Create a new task in a TickTick project."""
     try:
@@ -109,6 +120,8 @@ async def create_task(
             priority=priority,
             due_date=due_date,
             reminders=reminders,
+            status=status,
+            completed_time=completed_time,
         )
     except ValueError as e:
         logger.error(f"Error creating task: {e}")
