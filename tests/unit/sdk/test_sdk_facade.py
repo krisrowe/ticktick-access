@@ -96,3 +96,18 @@ async def test_facade_create_task_returns_success_envelope(authenticated_user):
     assert result["success"] is True
     assert result["task"]["title"] == "Buy milk"
     assert "Buy milk" in result["message"]
+
+
+@respx.mock
+async def test_facade_move_task_returns_success_envelope(authenticated_user):
+    respx.post("https://api.ticktick.com/open/v1/task/move").mock(
+        return_value=httpx.Response(200, json=[{"id": "t1"}])
+    )
+    respx.get("https://api.ticktick.com/open/v1/project/p2/task/t1").mock(
+        return_value=httpx.Response(200, json={"id": "t1", "projectId": "p2"})
+    )
+    result = await TickTickSDK.move_task("p1", "p2", "t1")
+    assert result["success"] is True
+    assert result["task"]["projectId"] == "p2"
+    assert "moved" in result["message"]
+

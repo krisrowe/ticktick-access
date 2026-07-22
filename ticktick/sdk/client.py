@@ -164,3 +164,19 @@ class TickTickSDK:
 
         await tasks.delete_task(cls._client(), project_id, task_id)
         return {"success": True, "message": f"Task {task_id} deleted"}
+
+    @classmethod
+    async def move_task(
+        cls, from_project_id: str, to_project_id: str, task_id: str
+    ) -> dict[str, Any]:
+        from ticktick.sdk import tasks
+
+        result = await tasks.move_task(
+            cls._client(), from_project_id, to_project_id, task_id
+        )
+        return {
+            "success": True,
+            "task": result,
+            "message": f"Task {task_id} moved from project {from_project_id} to {to_project_id}",
+        }
+

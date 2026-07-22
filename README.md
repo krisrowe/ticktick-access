@@ -320,7 +320,9 @@ shell environment rather than in the registration command.
 | `create_task` | Create a new task |
 | `update_task` | Update an existing task |
 | `complete_task` | Mark a task as completed |
+| `move_task` | Move an existing task from one project to another |
 | `delete_task` | Permanently delete a task |
+
 
 ## Troubleshooting
 

@@ -113,3 +113,28 @@ async def test_update_task_round_trip(authenticated_user):
     result = await tools.update_task(project_id="p1", task_id="t1", title="New")
     assert result["success"] is True
     assert result["task"]["title"] == "New"
+
+
+@respx.mock
+async def test_move_task_round_trip(authenticated_user):
+    respx.post("https://api.ticktick.com/open/v1/task/move").mock(
+        return_value=httpx.Response(200, json=[{"id": "t1"}])
+    )
+    respx.get("https://api.ticktick.com/open/v1/project/p2/task/t1").mock(
+        return_value=httpx.Response(200, json={"id": "t1", "projectId": "p2"})
+    )
+    result = await tools.move_task(from_project_id="p1", to_project_id="p2", task_id="t1")
+    assert result["success"] is True
+    assert result["task"]["projectId"] == "p2"
+
+
+@respx.mock
+async def test_move_task_returns_error_envelope_on_api_failure(authenticated_user):
+    respx.post("https://api.ticktick.com/open/v1/task/move").mock(
+        return_value=httpx.Response(500, text="server error")
+    )
+    result = await tools.move_task(from_project_id="p1", to_project_id="p2", task_id="t1")
+    assert result["success"] is False
+    assert result["task"] is None
+    assert "error" in result
+

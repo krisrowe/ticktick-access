@@ -187,3 +187,25 @@ async def delete_task(project_id: str, task_id: str) -> dict[str, Any]:
     except APIError as e:
         logger.error(f"delete_task: {e}")
         return {"success": False, "error": str(e)}
+
+
+async def move_task(
+    from_project_id: str,
+    to_project_id: str,
+    task_id: str,
+) -> dict[str, Any]:
+    """Move an existing task from one project to another.
+
+    Args:
+        from_project_id: The source project ID containing the task.
+        to_project_id: The target project ID to move the task to.
+        task_id: The task ID to move.
+    """
+    try:
+        return await sdk.move_task(from_project_id, to_project_id, task_id)
+    except AuthenticationError as e:
+        return {"success": False, "error": str(e), "task": None}
+    except APIError as e:
+        logger.error(f"move_task: {e}")
+        return {"success": False, "error": str(e), "task": None}
+

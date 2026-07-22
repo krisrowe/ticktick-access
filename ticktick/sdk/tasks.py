@@ -149,3 +149,23 @@ async def complete_task(
 async def delete_task(client: TickTickClient, project_id: str, task_id: str) -> None:
     """Permanently delete a task."""
     await client.delete(f"project/{project_id}/task/{task_id}")
+
+
+async def move_task(
+    client: TickTickClient,
+    from_project_id: str,
+    to_project_id: str,
+    task_id: str,
+) -> dict[str, Any]:
+    """Move a task from one project to another."""
+    payload = [
+        {
+            "fromProjectId": from_project_id,
+            "toProjectId": to_project_id,
+            "taskId": task_id,
+        }
+    ]
+    await client.post("task/move", payload)
+    moved = await get_task(client, to_project_id, task_id)
+    return moved or {"id": task_id, "projectId": to_project_id}
+

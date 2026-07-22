@@ -163,3 +163,21 @@ async def test_delete_task_calls_delete_endpoint():
     )
     await tasks.delete_task(TickTickClient(token="t"), "p1", "t1")
     assert route.called
+
+
+@respx.mock
+async def test_move_task_calls_move_endpoint():
+    move_route = respx.post("https://api.ticktick.com/open/v1/task/move").mock(
+        return_value=httpx.Response(200, json=[{"id": "t1", "projectId": "p2"}])
+    )
+    respx.get("https://api.ticktick.com/open/v1/project/p2/task/t1").mock(
+        return_value=httpx.Response(200, json={"id": "t1", "projectId": "p2", "title": "Moved Task"})
+    )
+    result = await tasks.move_task(TickTickClient(token="t"), "p1", "p2", "t1")
+    assert move_route.called
+    assert b'"fromProjectId":"p1"' in move_route.calls[0].request.content
+    assert b'"toProjectId":"p2"' in move_route.calls[0].request.content
+    assert b'"taskId":"t1"' in move_route.calls[0].request.content
+    assert result["projectId"] == "p2"
+    assert result["title"] == "Moved Task"
+
