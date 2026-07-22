@@ -47,17 +47,24 @@ TASK_FIELDS = {
 }
 
 
-async def list_tasks(client: TickTickClient, project_id: str) -> dict[str, Any]:
-    """Return all tasks in a project plus a small status summary."""
+async def list_tasks(
+    client: TickTickClient, project_id: str, include_completed: bool = False
+) -> dict[str, Any]:
+    """Return tasks in a project plus a small status summary."""
     data = await client.get(f"project/{project_id}/data")
-    tasks = (data or {}).get("tasks", []) if isinstance(data, dict) else []
+    all_tasks = (data or {}).get("tasks", []) if isinstance(data, dict) else []
+    if include_completed:
+        tasks = all_tasks
+    else:
+        tasks = [t for t in all_tasks if t.get("status") == 0]
     return {
         "project_id": project_id,
         "tasks": tasks,
         "count": len(tasks),
-        "completed": sum(1 for t in tasks if t.get("status") == 2),
-        "incomplete": sum(1 for t in tasks if t.get("status") == 0),
+        "completed": sum(1 for t in all_tasks if t.get("status") == 2),
+        "incomplete": sum(1 for t in all_tasks if t.get("status") == 0),
     }
+
 
 
 async def get_task(

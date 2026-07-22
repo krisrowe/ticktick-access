@@ -13,7 +13,7 @@ from ticktick.sdk.client import APIError, TickTickClient
 
 
 @respx.mock
-async def test_list_tasks_returns_tasks_with_status_summary():
+async def test_list_tasks_filters_completed_by_default():
     respx.get("https://api.ticktick.com/open/v1/project/p1/data").mock(
         return_value=httpx.Response(200, json={
             "tasks": [
@@ -24,10 +24,26 @@ async def test_list_tasks_returns_tasks_with_status_summary():
         })
     )
     result = await tasks.list_tasks(TickTickClient(token="t"), "p1")
-    assert result["count"] == 3
+    assert result["count"] == 2
     assert result["completed"] == 1
     assert result["incomplete"] == 2
-    assert result["project_id"] == "p1"
+    assert len(result["tasks"]) == 2
+
+
+@respx.mock
+async def test_list_tasks_includes_completed_when_flag_is_true():
+    respx.get("https://api.ticktick.com/open/v1/project/p1/data").mock(
+        return_value=httpx.Response(200, json={
+            "tasks": [
+                {"id": "t1", "title": "open one", "status": 0},
+                {"id": "t2", "title": "done", "status": 2},
+            ]
+        })
+    )
+    result = await tasks.list_tasks(TickTickClient(token="t"), "p1", include_completed=True)
+    assert result["count"] == 2
+    assert len(result["tasks"]) == 2
+
 
 
 @respx.mock

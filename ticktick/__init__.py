@@ -7,7 +7,8 @@ import ticktick as _self
 from ticktick.mcp import tools
 
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
+
 
 
 

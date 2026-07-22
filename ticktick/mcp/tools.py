@@ -47,19 +47,26 @@ async def count_projects() -> dict[str, Any]:
         return {"error": str(e), "count": 0}
 
 
-async def list_tasks(project_id: str) -> dict[str, Any]:
-    """List all tasks in a TickTick project.
+async def list_tasks(
+    project_id: str, include_completed: bool = False
+) -> dict[str, Any]:
+    """List tasks in a TickTick project.
 
     Args:
         project_id: The project ID (from list_projects).
+        include_completed: Optional flag to include completed tasks
+            (default: False).
     """
     try:
-        return await sdk.list_tasks(project_id)
+        return await sdk.list_tasks(
+            project_id, include_completed=include_completed
+        )
     except AuthenticationError as e:
         return {"error": str(e), "project_id": project_id, "tasks": [], "count": 0}
     except APIError as e:
         logger.error(f"list_tasks: {e}")
         return {"error": str(e), "project_id": project_id, "tasks": [], "count": 0}
+
 
 
 async def create_task(

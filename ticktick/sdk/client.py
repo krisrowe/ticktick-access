@@ -123,10 +123,15 @@ class TickTickSDK:
         return {"count": await projects.count_projects(cls._client())}
 
     @classmethod
-    async def list_tasks(cls, project_id: str) -> dict[str, Any]:
+    async def list_tasks(
+        cls, project_id: str, include_completed: bool = False
+    ) -> dict[str, Any]:
         from ticktick.sdk import tasks
 
-        return await tasks.list_tasks(cls._client(), project_id)
+        return await tasks.list_tasks(
+            cls._client(), project_id, include_completed=include_completed
+        )
+
 
     @classmethod
     async def create_task(cls, project_id: str, title: str, **kwargs) -> dict[str, Any]:

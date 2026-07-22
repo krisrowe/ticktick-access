@@ -316,7 +316,8 @@ shell environment rather than in the registration command.
 |------|-------------|
 | `list_projects` | List all TickTick projects (lists) |
 | `count_projects` | Return the number of projects (safe smoke-test tool — see below) |
-| `list_tasks` | List tasks in a project |
+| `list_tasks` | List tasks in a project (optional `include_completed` flag) |
+
 | `create_task` | Create a new task |
 | `update_task` | Update an existing task |
 | `complete_task` | Mark a task as completed |
